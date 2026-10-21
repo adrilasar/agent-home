@@ -169,6 +169,21 @@ class InstallationTests(unittest.TestCase):
         self.assertTrue((custom / "AGENTS.md").exists())
 
 
+class ScheduleTests(unittest.TestCase):
+    def test_platform_dispatch_for_install_and_remove(self):
+        for name, platform, command, removal in (
+                ("posix", "darwin", [sys.executable, str(app.REPO / "setup/macos.py")], "remove"),
+                ("posix", "linux", ["bash", str(app.REPO / "setup/linux.sh")], "remove"),
+                ("nt", "win32", ["powershell.exe", "-NoProfile", "-File",
+                                  str(app.REPO / "setup/windows.ps1")], "-Remove")):
+            for remove in (False, True):
+                with self.subTest(platform=platform, remove=remove):
+                    with patch.object(app.os, "name", name), patch.object(app.sys, "platform", platform):
+                        with patch.object(app.subprocess, "run") as run:
+                            app.schedule(remove=remove)
+                    run.assert_called_once_with(command + ([removal] if remove else []), check=True)
+
+
 class SyncTests(unittest.TestCase):
     def test_upstream_update_preserves_private_content(self):
         with tempfile.TemporaryDirectory(prefix="agent upstream ") as temporary:

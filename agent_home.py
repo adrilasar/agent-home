@@ -121,6 +121,9 @@ def schedule(remove=False):
     if os.name == "nt":
         command = ["powershell.exe", "-NoProfile", "-File", str(REPO / "setup/windows.ps1")]
         command += ["-Remove"] if remove else []
+    elif sys.platform == "darwin":
+        command = [sys.executable, str(REPO / "setup/macos.py")]
+        command += ["remove"] if remove else []
     else:
         command = ["bash", str(REPO / "setup/linux.sh")]
         command += ["remove"] if remove else []
