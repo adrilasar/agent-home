@@ -23,7 +23,7 @@ class WindowsSyncTests(unittest.TestCase):
     def run_launcher(self, source, *, state=True):
         temporary = tempfile.TemporaryDirectory(prefix="agent home background ")
         self.addCleanup(temporary.cleanup)
-        root = Path(temporary.name)
+        root = Path(temporary.name).resolve()
         launcher = root / "windows_sync.pyw"
         shutil.copy2(LAUNCHER, launcher)
         repo = root / "repo with spaces"

@@ -18,7 +18,7 @@ class InstallationTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="agent home ")
         self.addCleanup(self.temp.cleanup)
-        self.root = Path(self.temp.name)
+        self.root = Path(self.temp.name).resolve()
         self.home = self.root / "user home"
         self.repo = self.root / "repo"
         self.repo.mkdir()
@@ -107,6 +107,18 @@ class InstallationTests(unittest.TestCase):
         self.assertEqual((self.home / ".codex/AGENTS.md").read_bytes(), original_instructions)
         self.assertEqual(changed.read_bytes(), "my café edit".encode())
 
+    def test_scheduler_failure_preserves_state_and_backups_on_uninstall(self):
+        original = self.home / ".codex/AGENTS.md"
+        original.parent.mkdir(parents=True)
+        original.write_bytes(b"original")
+        self.install()
+        state_root = self.home / ".agent-home"
+        before = {p: p.read_bytes() for p in state_root.rglob("*") if p.is_file()}
+        self.scheduler.side_effect = subprocess.CalledProcessError(1, "scheduler")
+        with self.assertRaises(subprocess.CalledProcessError):
+            app.uninstall(self.home)
+        self.assertEqual(before, {p: p.read_bytes() for p in state_root.rglob("*") if p.is_file()})
+
     def test_new_and_removed_skills_and_unmanaged_files(self):
         original = self.home / ".codex/skills/global/SKILL.md"
         original.parent.mkdir(parents=True)
@@ -187,7 +199,7 @@ class ScheduleTests(unittest.TestCase):
 class SyncTests(unittest.TestCase):
     def test_upstream_update_preserves_private_content(self):
         with tempfile.TemporaryDirectory(prefix="agent upstream ") as temporary:
-            root = Path(temporary)
+            root = Path(temporary).resolve()
             upstream = root / "public"
             private = root / "private"
             home = root / "home"
@@ -230,7 +242,7 @@ class SyncTests(unittest.TestCase):
 
     def test_real_git_update_dirty_tree_and_unpublished_commits(self):
         with tempfile.TemporaryDirectory(prefix="agent sync ") as temporary:
-            root = Path(temporary)
+            root = Path(temporary).resolve()
             remote = root / "remote.git"
             author = root / "author"
             consumer = root / "consumer"

@@ -21,7 +21,7 @@ class MacOSScheduleTests(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory(prefix="agent home café & ")
         self.addCleanup(temporary.cleanup)
-        self.home = Path(temporary.name)
+        self.home = Path(temporary.name).resolve()
         self.state = self.home / ".agent-home"
         self.state.mkdir()
         (self.state / "state.json").write_text("{}", encoding="utf-8")
@@ -98,6 +98,19 @@ class MacOSScheduleTests(unittest.TestCase):
                 macos.schedule(self.home, remove=True)
         self.assertEqual(self.plist.read_bytes(), b"old configuration")
 
+    def test_status_lookup_errors_preserve_plist_for_install_and_remove(self):
+        self.plist.parent.mkdir(parents=True)
+        self.plist.write_bytes(b"old configuration")
+        for remove in (False, True):
+            for code in (1, 5, 13):
+                with self.subTest(remove=remove, code=code):
+                    results = ([] if remove else [self.result()]) + [self.result(code)]
+                    with patch.object(macos, "launchctl", side_effect=results) as ctl:
+                        with self.assertRaises(subprocess.CalledProcessError):
+                            macos.schedule(self.home, remove=remove)
+                    self.assertEqual(self.plist.read_bytes(), b"old configuration")
+                    self.assertEqual(ctl.call_args_list[-1], call("print", self.service, check=False))
+
     def test_missing_state_and_login_session_do_not_write_a_plist(self):
         (self.state / "state.json").unlink()
         with patch.object(macos, "launchctl") as ctl:
@@ -123,7 +136,7 @@ class NativeLaunchdTests(unittest.TestCase):
     def test_install_run_reinstall_and_remove_isolated_agent(self):
         # Never load the real sync job or use the user's actual state/agent label.
         with tempfile.TemporaryDirectory(prefix="agent home café & ") as temporary:
-            home = Path(temporary)
+            home = Path(temporary).resolve()
             state = home / ".agent-home"
             state.mkdir()
             (state / "state.json").write_text("{}", encoding="utf-8")
@@ -131,10 +144,13 @@ class NativeLaunchdTests(unittest.TestCase):
             repo.mkdir()
             result = home / "result.json"
             probe = ("import json, os, pathlib, sys\n"
-                     f"pathlib.Path({str(result)!r}).write_text(json.dumps({{\n"
+                     f"result = pathlib.Path({str(result)!r})\n"
+                     "temporary = result.with_suffix('.tmp')\n"
+                     "temporary.write_text(json.dumps({\n"
                      "    'args': sys.argv[1:], 'codex': os.environ.get('CODEX_HOME'),\n"
                      "    'prompt': os.environ.get('GIT_TERMINAL_PROMPT'),\n"
-                     "}), encoding='utf-8')\n")
+                     "}), encoding='utf-8')\n"
+                     "temporary.replace(result)\n")
             (repo / "agent_home.py").write_text(probe, encoding="utf-8")
             label = f"io.github.agent-home.test-{uuid.uuid4().hex}"
             with patch.object(macos, "REPO", repo), patch.object(macos, "LABEL", label):
@@ -154,7 +170,7 @@ class NativeLaunchdTests(unittest.TestCase):
                     macos.schedule(home, remove=True)
                 macos.schedule(home, remove=True)
                 service = f"gui/{os.getuid()}/{label}"
-                self.assertNotEqual(macos.launchctl("print", service, check=False).returncode, 0)
+                self.assertEqual(macos.launchctl("print", service, check=False).returncode, 113)
                 self.assertFalse((home / "Library/LaunchAgents" / f"{label}.plist").exists())
 
 

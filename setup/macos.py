@@ -28,7 +28,12 @@ def schedule(home, remove=False):
 
     # bootout errors must not be ignored for a registered job: uninstall must
     # leave the state intact if a scheduled sync could still be running.
-    if launchctl("print", service, check=False).returncode == 0:
+    status = launchctl("print", service, check=False)
+    # launchctl uses 113 for an unknown service. Other lookup failures do not
+    # establish that the job is absent, so preserve installation state.
+    if status.returncode not in (0, 113):
+        status.check_returncode()
+    if status.returncode == 0:
         launchctl("bootout", service)
     if remove:
         plist.unlink(missing_ok=True)
