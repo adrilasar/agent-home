@@ -4,6 +4,8 @@ Sync global agent instructions and personal skills across computers and harnesse
 through Git. Especially useful for remote-envs: remote development environments
 where you launch and control agents from another computer.
 
+![Common fragments and skills sync to both machines; each machine also receives its own fragment and skills.](assets/context-sync.svg)
+
 ## Set up your repository
 
 You need Python 3.10+, Git, and GitHub authentication on each computer.
