@@ -4,14 +4,8 @@ Global agent instructions and personal skills shared across computers and harnes
 
 ## Set up your repository
 
-You need Python 3.10+ and Git. Keep your instructions and skills in your own
-repository. Choose one option:
+You need Python 3.10+, Git, and GitHub authentication on each computer.
 
-- **Private repository — recommended:** keeps your personal content private.
-- **Public fork:** makes your instructions and skills visible to everyone.
-  Fork this repository on GitHub, then clone your fork.
-
-For the recommended private setup, authenticate with GitHub on each computer.
 Create an **empty private repository** on GitHub, then run:
 
 ```sh
@@ -64,9 +58,6 @@ installation clone is not on `main`, has local changes, or has unpublished commi
 Develop changes in another clone or worktree to keep the installation clone clean.
 
 ### Receive project updates
-
-The private setup above already configures `upstream`. For a public fork, add it
-once with `git remote add upstream https://github.com/adrilasar/agent-home.git`.
 
 In your development clone, fetch and merge improvements from the public project:
 
