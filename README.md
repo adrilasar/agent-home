@@ -62,10 +62,6 @@ computers receive them automatically. To sync immediately:
 python3 agent_home.py sync
 ```
 
-Sync fetches and applies `origin/main`, including skill removals. It stops if the
-installation clone is not on `main`, has local changes, or has unpublished commits.
-Make edits in a separate clone or worktree to keep the installation clone clean.
-
 ### Receive project updates
 
 To bring updates from the public project into your private repository:
@@ -101,24 +97,26 @@ For the `example` computer, these fragments combine in order:
 `common/FRAGMENT.md`:
 
 ```markdown
-Delete this example 1.
+<!-- Example: replace or remove this content before use. -->
+Keep explanations concise.
 ```
 
 `machines/example/FRAGMENT.md`:
 
 ```markdown
-Delete this example 2.
+<!-- Example: replace or remove this content before use. -->
+This computer is named `example`.
 ```
 
 The generated `AGENTS.md` or `CLAUDE.md` contains:
 
 ```markdown
-Delete this example 1.
+Keep explanations concise.
 
-Delete this example 2.
+This computer is named `example`.
 ```
 
-Source comments are omitted here. Replace or remove both example fragments
+Comments are omitted from the combined output shown here. Replace or remove both example fragments
 before use.
 
 Files are installed into:
