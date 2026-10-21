@@ -96,6 +96,31 @@ Each scope can contain:
 - `skills/<name>/SKILL.md` and resources: skills copied in full. Skill names must
   be unique across the selected scopes.
 
+For the `example` computer, these fragments combine in order:
+
+`common/FRAGMENT.md`:
+
+```markdown
+Delete this example 1.
+```
+
+`machines/example/FRAGMENT.md`:
+
+```markdown
+Delete this example 2.
+```
+
+The generated `AGENTS.md` or `CLAUDE.md` contains:
+
+```markdown
+Delete this example 1.
+
+Delete this example 2.
+```
+
+Source comments are omitted here. Replace or remove both example fragments
+before use.
+
 Files are installed into:
 
 - **Codex:** `~/.codex/AGENTS.md` and `~/.codex/skills/` (respects `CODEX_HOME`).
