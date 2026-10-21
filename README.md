@@ -36,7 +36,7 @@ before installing, then commit and push.
 
 Clone your repository into a permanent location on each computer and keep that
 installation clone on `main`. Linux requires systemd user services; Windows uses
-Task Scheduler. macOS scheduling is not supported.
+Task Scheduler; macOS uses a per-user launchd agent.
 
 From the clone, select the computer by its folder in `machines/` and the harnesses
 to configure:

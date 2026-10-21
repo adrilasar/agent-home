@@ -18,7 +18,7 @@ class InstallationTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="agent home ")
         self.addCleanup(self.temp.cleanup)
-        self.root = Path(self.temp.name)
+        self.root = Path(self.temp.name).resolve()
         self.home = self.root / "user home"
         self.repo = self.root / "repo"
         self.repo.mkdir()
@@ -107,6 +107,18 @@ class InstallationTests(unittest.TestCase):
         self.assertEqual((self.home / ".codex/AGENTS.md").read_bytes(), original_instructions)
         self.assertEqual(changed.read_bytes(), "my café edit".encode())
 
+    def test_scheduler_failure_preserves_state_and_backups_on_uninstall(self):
+        original = self.home / ".codex/AGENTS.md"
+        original.parent.mkdir(parents=True)
+        original.write_bytes(b"original")
+        self.install()
+        state_root = self.home / ".agent-home"
+        before = {p: p.read_bytes() for p in state_root.rglob("*") if p.is_file()}
+        self.scheduler.side_effect = subprocess.CalledProcessError(1, "scheduler")
+        with self.assertRaises(subprocess.CalledProcessError):
+            app.uninstall(self.home)
+        self.assertEqual(before, {p: p.read_bytes() for p in state_root.rglob("*") if p.is_file()})
+
     def test_new_and_removed_skills_and_unmanaged_files(self):
         original = self.home / ".codex/skills/global/SKILL.md"
         original.parent.mkdir(parents=True)
@@ -169,10 +181,25 @@ class InstallationTests(unittest.TestCase):
         self.assertTrue((custom / "AGENTS.md").exists())
 
 
+class ScheduleTests(unittest.TestCase):
+    def test_platform_dispatch_for_install_and_remove(self):
+        for name, platform, command, removal in (
+                ("posix", "darwin", [sys.executable, str(app.REPO / "setup/macos.py")], "remove"),
+                ("posix", "linux", ["bash", str(app.REPO / "setup/linux.sh")], "remove"),
+                ("nt", "win32", ["powershell.exe", "-NoProfile", "-File",
+                                  str(app.REPO / "setup/windows.ps1")], "-Remove")):
+            for remove in (False, True):
+                with self.subTest(platform=platform, remove=remove):
+                    with patch.object(app.os, "name", name), patch.object(app.sys, "platform", platform):
+                        with patch.object(app.subprocess, "run") as run:
+                            app.schedule(remove=remove)
+                    run.assert_called_once_with(command + ([removal] if remove else []), check=True)
+
+
 class SyncTests(unittest.TestCase):
     def test_upstream_update_preserves_private_content(self):
         with tempfile.TemporaryDirectory(prefix="agent upstream ") as temporary:
-            root = Path(temporary)
+            root = Path(temporary).resolve()
             upstream = root / "public"
             private = root / "private"
             home = root / "home"
@@ -215,7 +242,7 @@ class SyncTests(unittest.TestCase):
 
     def test_real_git_update_dirty_tree_and_unpublished_commits(self):
         with tempfile.TemporaryDirectory(prefix="agent sync ") as temporary:
-            root = Path(temporary)
+            root = Path(temporary).resolve()
             remote = root / "remote.git"
             author = root / "author"
             consumer = root / "consumer"
