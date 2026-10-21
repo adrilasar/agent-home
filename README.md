@@ -51,22 +51,6 @@ use `py -3` instead of `python3`.
 
 Installation applies the files and schedules synchronization every 15 minutes.
 
-On macOS, install from a terminal in your logged-in desktop session, without
-`sudo`. The LaunchAgent also syncs when loaded and at login, and runs while you
-are logged in. It uses the Python interpreter, `PATH`, and optional `CODEX_HOME`
-from installation; reinstall if these change. Keep the clone and Python in
-permanent locations accessible to background processes (outside Desktop,
-Documents, and Downloads). Authenticate Git before installing so background
-syncs can fetch without prompting.
-
-The agent is stored in
-`~/Library/LaunchAgents/io.github.agent-home.sync.plist`; output and errors are
-appended to `~/.agent-home/sync.log`. To inspect its status:
-
-```sh
-launchctl print gui/$(id -u)/io.github.agent-home.sync
-```
-
 ## Usage and synchronization
 
 Ask your agent to update your global instructions or personal skills, or edit the
