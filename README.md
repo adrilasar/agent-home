@@ -4,37 +4,34 @@ Global agent instructions and personal skills shared across computers and harnes
 
 ## Set up your repository
 
-You need Python 3.10+, Git, and GitHub authentication on each computer.
+You need Python 3.10+ and Git. Keep your instructions and skills in your own
+repository. Choose one option:
 
-- **Public configuration:** fork this repository into your account.
-- **Private configuration:** create an empty private repository, clone this public
-  repository, and point `origin` at your private repository before adding personal
-  content. GitHub forks of public repositories are always public.
+- **Private repository — recommended:** keeps your personal content private.
+- **Public fork:** makes your instructions and skills visible to everyone.
+  Fork this repository on GitHub, then clone your fork.
 
-For a private configuration, replace `YOUR-ACCOUNT` below with your GitHub username:
+For the recommended private setup, authenticate with GitHub on each computer.
+Create an **empty private repository** on GitHub, then run:
 
 ```sh
 git clone https://github.com/adrilasar/agent-home.git
 cd agent-home
 git remote rename origin upstream
-git remote add origin https://github.com/YOUR-ACCOUNT/agent-home-personal.git
+git remote add origin https://github.com/YOUR-ACCOUNT/YOUR-REPO.git
 git config remote.pushDefault origin
 git push -u origin main
 ```
 
-For a public fork, clone your fork and add the public project as `upstream`:
-
-```sh
-git remote add upstream https://github.com/adrilasar/agent-home.git
-git config remote.pushDefault origin
-```
-
-`origin` is your repository; `upstream` is the public project. Make personal changes
-in your own repository. The included `machines/example/` configuration is a starting
-point: create a folder for each computer and add your instructions and skills.
-Import existing instructions and skills before installing, then commit and push.
+Replace `YOUR-ACCOUNT/YOUR-REPO` with your private repository's path.
+`origin` points to your repository; `upstream` points to this public project
+for future updates.
 
 ## Installation
+
+Use `machines/example/` as a starting point: create a folder for each computer
+and add your instructions and skills. Import existing instructions and skills
+before installing, then commit and push.
 
 Clone your repository into a permanent location on each computer and keep that
 installation clone on `main`. Linux requires systemd user services; Windows uses
@@ -67,6 +64,9 @@ installation clone is not on `main`, has local changes, or has unpublished commi
 Develop changes in another clone or worktree to keep the installation clone clean.
 
 ### Receive project updates
+
+The private setup above already configures `upstream`. For a public fork, add it
+once with `git remote add upstream https://github.com/adrilasar/agent-home.git`.
 
 In your development clone, fetch and merge improvements from the public project:
 
