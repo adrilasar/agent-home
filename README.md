@@ -1,10 +1,15 @@
 # agent-home
 
-Global agent instructions and personal skills shared across computers and harnesses through Git.
+Sync global agent instructions and personal skills across computers and harnesses
+through Git. Especially useful for remote-envs: remote development environments
+where you launch and control agents from another computer.
 
 ## Set up your repository
 
 You need Python 3.10+, Git, and GitHub authentication on each computer.
+
+Your personal context stays in your private repository, while program updates
+come from this public project.
 
 Create an **empty private repository** on GitHub, then run:
 
@@ -46,8 +51,12 @@ Installation applies the files and schedules synchronization every 15 minutes.
 
 ## Usage and synchronization
 
-Edit the repository sources, not the installed copies. Once changes reach your
-repository's `main`, your computers receive them automatically. To sync immediately:
+Ask your agent to update your global instructions or personal skills, or edit the
+repository sources yourself. The included `manage-personal-context` skill provides
+agents with the repository and synchronization details.
+
+Installed copies are generated. Once changes reach your repository's `main`, your
+computers receive them automatically. To sync immediately:
 
 ```sh
 python3 agent_home.py sync
@@ -55,11 +64,11 @@ python3 agent_home.py sync
 
 Sync fetches and applies `origin/main`, including skill removals. It stops if the
 installation clone is not on `main`, has local changes, or has unpublished commits.
-Develop changes in another clone or worktree to keep the installation clone clean.
+Make edits in a separate clone or worktree to keep the installation clone clean.
 
 ### Receive project updates
 
-In your development clone, fetch and merge improvements from the public project:
+To bring updates from the public project into your private repository:
 
 ```sh
 git switch main
@@ -69,11 +78,8 @@ git merge upstream/main
 git push origin main
 ```
 
-Resolve any merge conflicts before pushing. This keeps your personal content and
-brings in project updates; it does not upload your content to the public project.
-Automatic sync reads only `origin/main`, so you decide when to incorporate upstream
-updates. For contributions to the public project, use a separate clone containing
-only public content.
+You choose when to bring in public updates. To contribute improvements, fork the
+public project.
 
 ## Organization
 
