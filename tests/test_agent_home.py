@@ -1,3 +1,4 @@
+import io
 import importlib.util
 import os
 from pathlib import Path
@@ -172,6 +173,75 @@ class InstallationTests(unittest.TestCase):
         self.assertTrue((self.home / ".codex/AGENTS.md").exists())
         self.assertFalse((self.home / ".agent-home").exists())
 
+    def cli_install(self, *harnesses):
+        with patch.object(Path, "home", return_value=self.home), patch.object(
+                sys, "argv", ["agent_home.py", "install", "desktop", *harnesses]):
+            app.main()
+
+    def test_first_cli_install_does_not_prompt(self):
+        with patch("builtins.input", side_effect=AssertionError("Unexpected prompt")):
+            self.cli_install("codex")
+        self.assertTrue((self.home / ".codex/AGENTS.md").is_file())
+        self.scheduler.assert_called_once_with()
+
+    def test_declined_or_unavailable_confirmation_preserves_entire_installation(self):
+        app.apply(self.home, "desktop", ["codex", "claude"])
+        before = {p: p.read_bytes() for p in self.home.rglob("*") if p.is_file()}
+        self.put("common/FRAGMENT.md", "pending update")
+        for response in ("n", "", EOFError()):
+            with self.subTest(response=response), patch("sys.stdout", new_callable=io.StringIO):
+                options = {"side_effect": response} if isinstance(response, Exception) else {"return_value": response}
+                with patch("builtins.input", **options):
+                    self.cli_install("codex")
+                self.assertEqual(before, {p: p.read_bytes() for p in self.home.rglob("*") if p.is_file()})
+                self.scheduler.assert_not_called()
+
+    def test_confirmed_reinstall_removes_only_managed_files_of_omitted_harness(self):
+        app.apply(self.home, "desktop", ["codex", "claude"])
+        unrelated = self.home / ".claude/skills/unmanaged/SKILL.md"
+        unrelated.parent.mkdir(parents=True)
+        unrelated.write_text("personal unmanaged skill", encoding="utf-8")
+        removed = self.home / ".claude/CLAUDE.md"
+        with patch("builtins.input", return_value="YES") as prompt, patch(
+                "sys.stdout", new_callable=io.StringIO) as output:
+            self.cli_install("codex")
+        prompt.assert_called_once()
+        self.assertIn(str(removed), output.getvalue())
+        self.assertFalse(removed.exists())
+        self.assertTrue((self.home / ".codex/AGENTS.md").exists())
+        self.assertEqual(unrelated.read_text(encoding="utf-8"), "personal unmanaged skill")
+        self.assertEqual(app.load_state(self.home)["harnesses"], ["codex"])
+        self.scheduler.assert_called_once_with()
+
+    def test_identical_cli_reinstall_still_requires_confirmation(self):
+        self.install()
+        with patch("builtins.input", return_value="y") as prompt:
+            self.cli_install("codex")
+        prompt.assert_called_once()
+        self.scheduler.assert_called_once_with()
+
+    def test_invalid_reinstall_does_not_prompt_or_schedule(self):
+        self.install()
+        self.skill("machines/desktop", "global")
+        with patch("builtins.input", side_effect=AssertionError("Unexpected prompt")):
+            with self.assertRaisesRegex(ValueError, "Duplicate skill"):
+                self.cli_install("codex")
+        self.scheduler.assert_not_called()
+
+    def test_backup_notice_identifies_original_and_recoverable_copy(self):
+        original = self.home / ".codex/AGENTS.md"
+        original.parent.mkdir(parents=True)
+        original.write_bytes(b"instructions before installation")
+        with patch("sys.stdout", new_callable=io.StringIO) as output:
+            self.install()
+        backup = self.home / ".agent-home/backups" / app.digest(str(original).encode())
+        self.assertEqual(backup.read_bytes(), b"instructions before installation")
+        self.assertIn(str(original), output.getvalue())
+        self.assertIn(str(backup), output.getvalue())
+        with patch("sys.stdout", new_callable=io.StringIO) as output:
+            self.install()
+        self.assertNotIn(str(backup), output.getvalue())
+
     def test_custom_codex_home(self):
         custom = self.root / "codex custom"
         with patch.dict(os.environ, {"CODEX_HOME": str(custom)}):
@@ -273,7 +343,8 @@ class SyncTests(unittest.TestCase):
                 git(author, "add", ".")
                 git(author, "commit", "-m", "Update")
                 git(author, "push")
-                app.sync(home)
+                with patch("builtins.input", side_effect=AssertionError("Sync must not prompt")):
+                    app.sync(home)
                 installed = home / ".codex/AGENTS.md"
                 self.assertIn("after café", installed.read_text(encoding="utf-8"))
                 current = installed.read_bytes()

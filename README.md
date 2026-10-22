@@ -13,6 +13,8 @@ You need Python 3.10+, Git, and GitHub authentication on each computer.
 Your personal context stays in your private repository, while program updates
 come from this public project.
 
+Do this once. If you already have your private repository, continue with Installation.
+
 Create an **empty private repository** on GitHub, for example
 `agent-home-personal`, then run:
 
@@ -33,22 +35,36 @@ for future updates.
 
 ## Installation
 
-Use `machines/example/` as a starting point. Choose a name for each computer and
-create its folder under `machines/`, for example `machines/my-laptop/`. Add that
-computer's instructions and skills, import any existing content you want to
-keep, then commit and push.
+If you just completed setup, continue in the same directory.
 
-On each computer, clone your private repository if you haven't already. From
-that clone, install using the computer name you chose and the harnesses you
-want to configure:
+On another computer, clone your private repository first:
 
 ```sh
-python3 agent_home.py install my-laptop codex claude # Windows: py -3 agent_home.py install my-laptop codex claude
+git clone https://github.com/YOUR-ACCOUNT/YOUR-REPO.git agent-home-personal
+cd agent-home-personal
+git remote add upstream https://github.com/adrilasar/agent-home.git
 ```
 
-Replace `my-laptop` with your computer's name. You can select only `codex` or
-only `claude`. You can run `install` again to change which harnesses are
-configured.
+Choose a computer name using lowercase letters, numbers and hyphens. Use
+`machines/example/` as a starting point to create `machines/COMPUTER-NAME/`
+and add that computer's instructions and skills.
+
+Before installing, copy any existing global instructions into the appropriate
+`FRAGMENT.md` files and personal skills into `skills/` folders. Installation
+replaces managed files; it does not merge their existing content. Commit and
+push your changes.
+
+From your personal clone, run:
+
+```sh
+python3 agent_home.py install COMPUTER-NAME codex claude # Windows: py -3 agent_home.py install COMPUTER-NAME codex claude
+```
+
+Replace `COMPUTER-NAME` with the name you chose. Available harnesses are `codex`
+and `claude`; list the ones you want to use.
+
+You can run `install` again to change the configured harnesses. The command
+shows the changes and asks for confirmation when reinstalling.
 
 Installation applies the files and schedules synchronization every 15 minutes.
 
@@ -59,12 +75,14 @@ repository sources yourself. The included `manage-personal-context` skill provid
 agents with the repository and synchronization details.
 
 Installed copies are generated. Once changes reach your repository's `main`, your
-computers receive them automatically. Automatic synchronization requires the
-installation clone to be on `main` with no uncommitted changes. To sync immediately:
+computers receive them automatically. To sync immediately:
 
 ```sh
 python3 agent_home.py sync # Windows: py -3 agent_home.py sync
 ```
+
+> Automatic synchronization requires the installation clone to be on `main`,
+> with no uncommitted changes or unpublished commits.
 
 ### Receive project updates
 
@@ -140,14 +158,8 @@ instructions or skills inside project repositories.
 python3 agent_home.py uninstall # Windows: py -3 agent_home.py uninstall
 ```
 
-Removes scheduled synchronization, state, and backups. Preserves installed
-instructions, skills, and the repository clone.
-
-## State and backups
-
-- Installation state: `~/.agent-home/state.json`.
-- Backups of preexisting files: `~/.agent-home/backups/`. Backups are removed during
-  installation or synchronization once they are seven days old.
+> Removes scheduled synchronization, state, and backups. Preserves installed
+> instructions, skills, and the repository clone.
 
 ## License
 

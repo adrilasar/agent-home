@@ -83,7 +83,7 @@ def prune_backups(home):
             path.unlink()
 
 
-def apply(home, machine, harnesses):
+def apply(home, machine, harnesses, confirm=False):
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", machine) or not (REPO / "machines" / machine).is_dir():
         raise ValueError(f"Unknown machine: {machine}")
     state = load_state(home)
@@ -99,12 +99,38 @@ def apply(home, machine, harnesses):
         old = previous.get(target)
         if old and (current[target] is None or digest(current[target]) != old["sha256"]):
             raise ValueError(f"Local edit detected; copy it to the repository before continuing: {path}")
+    if confirm and state:
+        print(f"Current installation: {state['machine']}; {', '.join(state['harnesses'])}")
+        print(f"Requested installation: {machine}; {', '.join(harnesses)}")
+        removed_harnesses = sorted(set(state["harnesses"]) - set(harnesses))
+        if removed_harnesses:
+            print("Managed instructions and skills for omitted harnesses will be removed: " +
+                  ", ".join(removed_harnesses))
+        removed = sorted(previous.keys() - wanted.keys())
+        created = sum(current[target] is None for target in wanted)
+        updated = sum(current[target] is not None and current[target] != data
+                      for target, data in wanted.items())
+        print(f"Files: {created} to create, {updated} to update, {len(removed)} to remove.")
+        if removed:
+            print("Managed files to remove:")
+            for target in removed:
+                print(f"  {target}")
+        try:
+            answer = input("Reinstall and apply these changes? [y/N] ")
+        except EOFError:
+            answer = ""
+        if answer.strip().casefold() not in {"y", "yes"}:
+            print("Installation cancelled; no files changed.")
+            return False
     records = {}
     backup_root = home / ".agent-home" / "backups"
     for target in sorted(previous.keys() | wanted.keys()):
         old = previous.get(target)
         if not old and current[target] is not None:
-            write(backup_root / digest(target.encode()), current[target])
+            backup = backup_root / digest(target.encode())
+            write(backup, current[target])
+            print(f"Backup created: {target} -> {backup} "
+                  "(expires after 7 days; removed on uninstall)")
         if target in wanted:
             if current[target] != wanted[target]:
                 write(Path(target), wanted[target])
@@ -115,6 +141,7 @@ def apply(home, machine, harnesses):
     write(home / ".agent-home" / "state.json", (json.dumps(state, indent=2) + "\n").encode())
     prune_backups(home)
     print(f"{machine}: {', '.join(harnesses)}; {len(wanted)} managed files")
+    return True
 
 
 def schedule(remove=False):
@@ -171,8 +198,8 @@ def main():
     args = parser.parse_args()
     home = Path.home().resolve()
     if args.command == "install":
-        apply(home, args.machine, list(dict.fromkeys(args.harnesses)))
-        schedule()
+        if apply(home, args.machine, list(dict.fromkeys(args.harnesses)), confirm=True):
+            schedule()
     elif args.command == "sync":
         sync(home)
     else:
