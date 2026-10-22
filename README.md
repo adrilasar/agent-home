@@ -13,7 +13,7 @@ You need Python 3.10+, Git, and GitHub authentication on each computer.
 Your personal context stays in your private repository, while program updates
 come from this public project.
 
-Do this once. If you already have your private repository, continue with Installation.
+Do this once. If you already have your private repository, continue with [Installation](#installation).
 
 Create an **empty private repository** on GitHub, for example
 `agent-home-personal`, then run:
@@ -35,9 +35,9 @@ for future updates.
 
 ## Installation
 
-If you just completed setup, continue in the same directory.
+**If you just completed setup,** continue in the same directory.
 
-On another computer, clone your private repository first:
+**On another computer,** clone your private repository first:
 
 ```sh
 git clone https://github.com/YOUR-ACCOUNT/YOUR-REPO.git agent-home-personal
@@ -50,14 +50,15 @@ Choose a computer name using lowercase letters, numbers and hyphens. Use
 and add that computer's instructions and skills.
 
 Before installing, copy any existing global instructions into the appropriate
-`FRAGMENT.md` files and personal skills into `skills/` folders. Installation
-replaces managed files; it does not merge their existing content. Commit and
+`FRAGMENT.md` files and personal skills into `skills/` folders. **Installation
+replaces managed files; it does not merge their existing content.** Commit and
 push your changes.
 
 From your personal clone, run:
 
 ```sh
-python3 agent_home.py install COMPUTER-NAME codex claude # Windows: py -3 agent_home.py install COMPUTER-NAME codex claude
+# Windows: py -3 agent_home.py install COMPUTER-NAME codex claude
+python3 agent_home.py install COMPUTER-NAME codex claude
 ```
 
 Replace `COMPUTER-NAME` with the name you chose. Available harnesses are `codex`
@@ -71,14 +72,16 @@ Installation applies the files and schedules synchronization every 15 minutes.
 ## Usage and synchronization
 
 Ask your agent to update your global instructions or personal skills, or edit the
-repository sources yourself. The included `manage-personal-context` skill provides
+repository sources yourself. The included [`manage-personal-context`](common/skills/manage-personal-context/SKILL.md)
+skill provides
 agents with the repository and synchronization details.
 
 Installed copies are generated. Once changes reach your repository's `main`, your
 computers receive them automatically. To sync immediately:
 
 ```sh
-python3 agent_home.py sync # Windows: py -3 agent_home.py sync
+# Windows: py -3 agent_home.py sync
+python3 agent_home.py sync
 ```
 
 > Automatic synchronization requires the installation clone to be on `main`,
@@ -116,6 +119,9 @@ Each scope can contain:
 `common/FRAGMENT.md` applies to every computer. Each computer also receives
 its own `machines/<computer>/FRAGMENT.md`.
 
+<details>
+<summary>Example: combining instruction fragments</summary>
+
 `common/FRAGMENT.md`:
 
 ```markdown
@@ -144,6 +150,8 @@ Keep explanations concise.
 This computer is named `example`.
 ```
 
+</details>
+
 Files are installed into:
 
 - **Codex:** `~/.codex/AGENTS.md` and `~/.codex/skills/` (respects `CODEX_HOME`).
@@ -155,7 +163,8 @@ instructions or skills inside project repositories.
 ## Uninstallation
 
 ```sh
-python3 agent_home.py uninstall # Windows: py -3 agent_home.py uninstall
+# Windows: py -3 agent_home.py uninstall
+python3 agent_home.py uninstall
 ```
 
 > Removes scheduled synchronization, state, and backups. Preserves installed
