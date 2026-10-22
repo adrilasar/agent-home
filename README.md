@@ -13,11 +13,12 @@ You need Python 3.10+, Git, and GitHub authentication on each computer.
 Your personal context stays in your private repository, while program updates
 come from this public project.
 
-Create an **empty private repository** on GitHub, then run:
+Create an **empty private repository** on GitHub, for example
+`agent-home-personal`, then run:
 
 ```sh
-git clone https://github.com/adrilasar/agent-home.git
-cd agent-home
+git clone https://github.com/adrilasar/agent-home.git agent-home-personal
+cd agent-home-personal
 git remote rename origin upstream
 git remote add origin https://github.com/YOUR-ACCOUNT/YOUR-REPO.git
 git config remote.pushDefault origin
@@ -25,29 +26,29 @@ git push -u origin main
 ```
 
 Replace `YOUR-ACCOUNT/YOUR-REPO` with your private repository's path.
+The repository and local folder names are your choice.
+
 `origin` points to your repository; `upstream` points to this public project
 for future updates.
 
 ## Installation
 
-Use `machines/example/` as a starting point: create a folder for each computer
-and add your instructions and skills. Import existing instructions and skills
-before installing, then commit and push.
+Use `machines/example/` as a starting point. Choose a name for each computer and
+create its folder under `machines/`, for example `machines/my-laptop/`. Add that
+computer's instructions and skills, import any existing content you want to
+keep, then commit and push.
 
-Clone your repository into a permanent location on each computer and keep that
-installation clone on `main`. Linux requires systemd user services; Windows uses
-Task Scheduler; macOS uses a per-user launchd agent.
-
-From the clone, select the computer by its folder in `machines/` and the harnesses
-to configure:
+On each computer, clone your private repository if you haven't already. From
+that clone, install using the computer name you chose and the harnesses you
+want to configure:
 
 ```sh
-python3 agent_home.py install example codex claude
+python3 agent_home.py install my-laptop codex claude # Windows: py -3 agent_home.py install my-laptop codex claude
 ```
 
-Replace `example` with your computer's folder name. You can select only `codex` or
-only `claude`. When reinstalling, list all harnesses you want to keep. On Windows,
-use `py -3` instead of `python3`.
+Replace `my-laptop` with your computer's name. You can select only `codex` or
+only `claude`. You can run `install` again to change which harnesses are
+configured.
 
 Installation applies the files and schedules synchronization every 15 minutes.
 
@@ -58,10 +59,11 @@ repository sources yourself. The included `manage-personal-context` skill provid
 agents with the repository and synchronization details.
 
 Installed copies are generated. Once changes reach your repository's `main`, your
-computers receive them automatically. To sync immediately:
+computers receive them automatically. Automatic synchronization requires the
+installation clone to be on `main` with no uncommitted changes. To sync immediately:
 
 ```sh
-python3 agent_home.py sync
+python3 agent_home.py sync # Windows: py -3 agent_home.py sync
 ```
 
 ### Receive project updates
@@ -76,8 +78,7 @@ git merge upstream/main
 git push origin main
 ```
 
-You choose when to bring in public updates. To contribute improvements, fork the
-public project.
+You choose when to bring in public updates.
 
 ## Organization
 
@@ -136,7 +137,7 @@ instructions or skills inside project repositories.
 ## Uninstallation
 
 ```sh
-python3 agent_home.py uninstall
+python3 agent_home.py uninstall # Windows: py -3 agent_home.py uninstall
 ```
 
 Removes scheduled synchronization, state, and backups. Preserves installed

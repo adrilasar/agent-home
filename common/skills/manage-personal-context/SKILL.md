@@ -3,8 +3,10 @@ name: manage-personal-context
 description: Create, edit or remove personal skills and global agent instructions (AGENTS.md and CLAUDE.md) managed by agent-home.
 ---
 
-Personal context is managed in the `agent-home` repository.
-Its location is recorded in the `repo` field of `~/.agent-home/state.json`.
+Personal context is managed in the personal repository recorded in the `repo`
+field of `~/.agent-home/state.json`. Read that field before editing sources;
+do not infer the repository from its name or the current checkout.
+
 Installed copies are generated; their sources live in the repository.
 
 Sources are organized into these scopes:
@@ -23,10 +25,11 @@ the selected scopes.
 
 The computer syncs automatically with `origin/main` every 15 minutes.
 Once changes reach `origin/main`, they can be applied immediately with
-`python3 <repo>/agent_home.py sync` (`py -3` on Windows).
+`python3 "<repo>/agent_home.py" sync`
+(`py -3 "<repo>/agent_home.py" sync` on Windows).
 
-In a personal copy, `origin` is the user's repository; `upstream`, if configured,
-is the public project. Personal content belongs in `origin`.
+`origin` points to the personal repository; `upstream`, if configured,
+points to the public project.
 
 Project-specific instructions and skills, and plugin-managed skills,
 are outside this system.
