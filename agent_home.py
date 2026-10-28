@@ -84,8 +84,8 @@ def prune_backups(home):
 
 
 def apply(home, machine, harnesses, confirm=False):
-    if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", machine) or not (REPO / "machines" / machine).is_dir():
-        raise ValueError(f"Unknown machine: {machine}")
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", machine):
+        raise ValueError(f"Invalid machine name: {machine}")
     state = load_state(home)
     previous = state["files"] if state else {}
     wanted = desired(home, machine, harnesses)
@@ -199,6 +199,7 @@ def main():
     home = Path.home().resolve()
     if args.command == "install":
         if apply(home, args.machine, list(dict.fromkeys(args.harnesses)), confirm=True):
+            (REPO / "machines" / args.machine).mkdir(parents=True, exist_ok=True)
             schedule()
     elif args.command == "sync":
         sync(home)

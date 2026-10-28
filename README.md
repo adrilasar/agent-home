@@ -45,14 +45,14 @@ cd agent-home-personal
 git remote add upstream https://github.com/adrilasar/agent-home.git
 ```
 
-Choose a computer name using lowercase letters, numbers and hyphens. Use
-`machines/example/` as a starting point to create `machines/COMPUTER-NAME/`
-and add that computer's instructions and skills.
+Choose a computer name using lowercase letters, numbers and hyphens.
 
-Before installing, copy any existing global instructions into the appropriate
-`FRAGMENT.md` files and personal skills into `skills/` folders. **Installation
-replaces managed files; it does not merge their existing content.** Commit and
-push your changes.
+If you already have global instructions or personal skills, copy them into the
+repository before installing. Use `common/FRAGMENT.md` for shared instructions,
+`machines/COMPUTER-NAME/FRAGMENT.md` for computer-specific instructions, and
+`skills/` folders in either scope for skills. Create the files and folders as
+needed, then commit and push your changes. **Installation replaces managed
+files; it does not merge their existing content.**
 
 From your personal clone, run:
 
@@ -62,7 +62,9 @@ python3 agent_home.py install COMPUTER-NAME codex claude
 ```
 
 Replace `COMPUTER-NAME` with the name you chose. Available harnesses are `codex`
-and `claude`; list the ones you want to use.
+and `claude`; list the ones you want to configure. This selects which global
+instruction files to generate from your fragments (`AGENTS.md` for Codex,
+`CLAUDE.md` for Claude Code) and where to copy your skills.
 
 You can run `install` again to change the configured harnesses. The command
 shows the changes and asks for confirmation when reinstalling.
