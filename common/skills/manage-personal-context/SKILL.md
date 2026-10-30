@@ -8,9 +8,7 @@ field of `~/.agent-home/state.json`. Read that field before editing sources;
 do not infer the repository from its name or the current checkout.
 
 Keep that installation clone on `main`, with no uncommitted changes or
-unpublished commits, so automatic sync can run. For branch/PR work, use
-another clone or worktree of that repository. Do not run `sync` from there:
-the installation state belongs to the installation clone.
+unpublished commits, so automatic sync can run.
 
 Installed copies are generated; their sources live in the repository.
 
