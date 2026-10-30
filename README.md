@@ -153,8 +153,13 @@ This computer is named `example`.
 
 Files are installed into:
 
-- **Codex:** `~/.codex/AGENTS.md` and `~/.codex/skills/` (respects `CODEX_HOME`).
+- **Codex:** `~/.codex/AGENTS.md` and `~/.codex/skills/` (respects `CODEX_HOME` at installation).
 - **Claude Code:** `~/.claude/CLAUDE.md` and `~/.claude/skills/`.
+
+Sync keeps using the Codex directory chosen at installation, even if `CODEX_HOME`
+changes or is unset. To change that directory, run `install` again with the desired
+`CODEX_HOME` (or unset it to use `~/.codex`). Existing installations keep the
+directory recorded in their managed file paths.
 
 This program manages global instructions and personal skills. It does not modify
 instructions or skills inside project repositories.

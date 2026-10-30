@@ -1,5 +1,6 @@
 import io
 import importlib.util
+import json
 import os
 from pathlib import Path
 import shutil
@@ -260,6 +261,79 @@ class InstallationTests(unittest.TestCase):
         app.uninstall(self.home)
         self.assertTrue((custom / "AGENTS.md").exists())
 
+    def test_sync_preserves_codex_directory_with_changed_or_missing_environment(self):
+        self.put("common/skills/global/AGENTS.md", "skill resource")
+        for legacy in (False, True):
+            for custom in (False, True):
+                for changed in (False, True):
+                    with self.subTest(legacy=legacy, custom=custom, changed=changed):
+                        case = self.root / f"case-{legacy}-{custom}-{changed}"
+                        home = case / "home"
+                        destination = case / "custom" if custom else home / ".codex"
+                        other = case / "other"
+                        os.environ.pop("CODEX_HOME", None)
+                        if custom:
+                            os.environ["CODEX_HOME"] = str(destination)
+                        app.apply(home, "desktop", ["codex", "claude"])
+                        if legacy:
+                            state = app.load_state(home)
+                            del state["codex_home"]
+                            (home / ".agent-home/state.json").write_text(json.dumps(state), encoding="utf-8")
+                        os.environ.pop("CODEX_HOME", None)
+                        if changed:
+                            os.environ["CODEX_HOME"] = str(other)
+                        self.put("common/FRAGMENT.md", f"updated {case.name}")
+                        with patch.object(app, "git", side_effect=lambda *args: "main" if args[0] == "branch" else ""), patch.object(
+                                app.runpy, "run_path", return_value={"apply": app.apply}):
+                            app.sync(home)
+                        self.assertIn(f"updated {case.name}", (destination / "AGENTS.md").read_text(encoding="utf-8"))
+                        self.assertTrue((destination / "skills/global/SKILL.md").is_file())
+                        self.assertTrue((destination / "skills/global/AGENTS.md").is_file())
+                        self.assertTrue((home / ".claude/CLAUDE.md").is_file())
+                        self.assertEqual(app.load_state(home)["codex_home"], str(destination))
+                        self.assertFalse(other.exists())
+                        if custom:
+                            self.assertFalse((home / ".codex").exists())
+
+    def test_reinstall_changes_codex_directory_only_after_confirmation(self):
+        self.install()
+        original = self.home / ".codex"
+        unrelated = original / "skills/unmanaged/SKILL.md"
+        unrelated.parent.mkdir(parents=True)
+        unrelated.write_bytes(b"personal skill")
+        custom = self.root / "custom codex"
+        before = {p: p.read_bytes() for p in self.home.rglob("*") if p.is_file()}
+        with patch.dict(os.environ, {"CODEX_HOME": str(custom)}):
+            with patch("builtins.input", return_value="n"):
+                self.cli_install("codex")
+            self.assertEqual(before, {p: p.read_bytes() for p in self.home.rglob("*") if p.is_file()})
+            self.assertFalse(custom.exists())
+            with patch("builtins.input", return_value="y"):
+                self.cli_install("codex")
+        self.assertFalse((original / "AGENTS.md").exists())
+        self.assertFalse((original / "skills/global/SKILL.md").exists())
+        self.assertTrue((custom / "AGENTS.md").is_file())
+        self.assertTrue((custom / "skills/global/SKILL.md").is_file())
+        self.assertEqual(app.load_state(self.home)["codex_home"], str(custom))
+        self.assertEqual(unrelated.read_bytes(), b"personal skill")
+        with patch("builtins.input", return_value="y"):
+            self.cli_install("codex")
+        self.assertFalse((custom / "AGENTS.md").exists())
+        self.assertFalse((custom / "skills/global/SKILL.md").exists())
+        self.assertTrue((original / "AGENTS.md").is_file())
+        self.assertEqual(app.load_state(self.home)["codex_home"], str(original))
+
+    def test_legacy_state_without_codex_directory_stops_without_changes(self):
+        self.install()
+        state = app.load_state(self.home)
+        del state["codex_home"]
+        del state["files"][str(self.home / ".codex/AGENTS.md")]
+        (self.home / ".agent-home/state.json").write_text(json.dumps(state), encoding="utf-8")
+        before = {p: p.read_bytes() for p in self.home.rglob("*") if p.is_file()}
+        with self.assertRaisesRegex(ValueError, "Cannot determine the installed Codex directory"):
+            self.install()
+        self.assertEqual(before, {p: p.read_bytes() for p in self.home.rglob("*") if p.is_file()})
+
 
 class ScheduleTests(unittest.TestCase):
     def test_platform_dispatch_for_install_and_remove(self):
@@ -348,15 +422,23 @@ class SyncTests(unittest.TestCase):
             git(author, "push", "-u", "origin", "main")
             git(root, "clone", str(remote), str(consumer))
             with patch.object(app, "REPO", consumer), patch.dict(os.environ, env):
-                app.apply(home, "desktop", ["codex"])
+                custom = root / "custom codex"
+                with patch.dict(os.environ, {"CODEX_HOME": str(custom)}):
+                    app.apply(home, "desktop", ["codex"])
+                # Simulate an installation made before destinations were persisted.
+                state = app.load_state(home)
+                del state["codex_home"]
+                (home / ".agent-home/state.json").write_text(json.dumps(state), encoding="utf-8")
                 source.write_text("after café", encoding="utf-8")
                 git(author, "add", ".")
                 git(author, "commit", "-m", "Update")
                 git(author, "push")
                 with patch("builtins.input", side_effect=AssertionError("Sync must not prompt")):
                     app.sync(home)
-                installed = home / ".codex/AGENTS.md"
+                installed = custom / "AGENTS.md"
                 self.assertIn("after café", installed.read_text(encoding="utf-8"))
+                self.assertEqual(app.load_state(home)["codex_home"], str(custom))
+                self.assertFalse((home / ".codex").exists())
                 current = installed.read_bytes()
                 git(consumer, "switch", "-c", "older", "HEAD~1")
                 git(consumer, "push", "-u", "origin", "older")
