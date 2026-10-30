@@ -79,7 +79,8 @@ skill provides
 agents with the repository and synchronization details.
 
 Installed copies are generated. Once changes reach your repository's `main`, your
-computers receive them automatically. To sync immediately:
+computers receive them automatically. To sync immediately, run from the
+installation clone recorded in `~/.agent-home/state.json` (`repo`):
 
 ```sh
 # Windows: py -3 agent_home.py sync
@@ -88,6 +89,9 @@ python3 agent_home.py sync
 
 > Automatic synchronization requires the installation clone to be on `main`,
 > with no uncommitted changes or unpublished commits.
+> For branch/PR work, use another clone or worktree. Run `sync` only from the
+> installation clone once changes reach `origin/main`; the installation state
+> belongs to that clone.
 
 ### Receive project updates
 

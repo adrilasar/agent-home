@@ -7,6 +7,9 @@ Personal context is managed in the personal repository recorded in the `repo`
 field of `~/.agent-home/state.json`. Read that field before editing sources;
 do not infer the repository from its name or the current checkout.
 
+Keep that installation clone on `main`, with no uncommitted changes or
+unpublished commits, so automatic sync can run.
+
 Installed copies are generated; their sources live in the repository.
 
 Sources are organized into these scopes:
@@ -24,9 +27,10 @@ a `SKILL.md` and optional resources. Skill names must be unique across
 the selected scopes.
 
 The computer syncs automatically with `origin/main` every 15 minutes.
-Once changes reach `origin/main`, they can be applied immediately with
+Once changes reach `origin/main`, sync from the installation clone with
 `python3 "<repo>/agent_home.py" sync`
-(`py -3 "<repo>/agent_home.py" sync` on Windows).
+(`py -3 "<repo>/agent_home.py" sync` on Windows), where `<repo>` is the
+installation path recorded in the state file.
 
 `origin` points to the personal repository; `upstream`, if configured,
 points to the public project.
