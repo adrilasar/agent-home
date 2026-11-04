@@ -1,6 +1,6 @@
 ---
 name: manage-personal-context
-description: Create, edit or remove personal skills and global agent instructions (AGENTS.md and CLAUDE.md) managed by agent-home.
+description: Use when creating, editing, or removing personal skills, global instructions (AGENTS.md and CLAUDE.md), or 'fragments' managed by agent-home.
 ---
 
 Personal context is managed in the personal repository recorded in the `repo`
